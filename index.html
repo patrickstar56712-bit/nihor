@@ -94,37 +94,32 @@ button[aria-pressed=true]{background:var(--gold);color:#fff;border-color:var(--g
 .cb{display:flex;flex-wrap:wrap;gap:8px}
 .cbox{display:flex;align-items:baseline;gap:7px;border-radius:8px;padding:5px 9px}
 .cbox span{font-size:11px;font-weight:600}
+.ic{height:18px;width:auto;max-width:28px;object-fit:contain;vertical-align:middle;margin-right:6px}
+.cbox .ic{align-self:center;margin-right:0}
 .cbox b{font-size:15px;font-weight:800}
 .cbox.g{background:#f2c230;color:#1b1500;border:1px solid #d9a916}
 .cbox.e{background:#fff;color:#1b2430;border:1px solid #cfcfcf}
-.sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,var(--tc,1.5fr));gap:9px;margin-bottom:15px}
+.sum{display:grid;grid-template-columns:1fr 1fr 1fr 1.5fr;gap:9px;margin-bottom:15px}
 @media (max-width:640px){.sum{grid-template-columns:1fr 1fr}}
 .sum>div{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 11px;min-width:0}
 .sum small{color:var(--mute);display:block;margin-bottom:2px;font-size:11px}
 .sum b{font-size:17px;font-weight:800;color:var(--gold)}
-.sum .main b{color:var(--gold);font-size:20px}
-.at{display:flex;align-items:baseline;gap:6px;margin-top:5px}
-.sum .at small{display:inline;margin:0}
-.sum .at b{font-size:14px}
+.sum .main b{font-size:20px}
+.sum.tight{grid-template-columns:.9fr .9fr .9fr 2fr}
+.sum.tight b{font-size:15px}
+.sum.tight .main b{font-size:17px}
+.at{display:block;margin-top:2px;font-size:11px;color:var(--mute);white-space:nowrap}
+.at b{font-size:11px;font-weight:800}
 .ph{display:inline-block;font-size:12px;font-weight:400;margin-left:6px;color:var(--ink)}
 :root[data-theme="black"] .ph,:root[data-theme="grey"] .ph{color:#fff}
 @media (prefers-color-scheme:dark){:root:not([data-theme]) .ph{color:#fff}}
 .ph.blk{display:block;margin:3px 0 0;font-size:11px;white-space:nowrap;overflow:hidden}
-#q{flex:1 1 185px;width:auto;min-width:70px;max-width:185px}
-.tb2{flex-wrap:nowrap}
-.tb2>*{flex-shrink:0}
-.tb2>#q{flex-shrink:1}
-@media (max-width:640px){.tb2{flex-wrap:wrap}}
-.sz{width:92px;text-align:center}
-#clrAll{position:relative;user-select:none;-webkit-user-select:none;touch-action:none}
-#clrAll::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:0;transform:translateX(-50%);background:var(--gold);border-radius:inherit;transition:width .25s}
-#clrAll.hold::before{width:100%;transition:width 3s linear}
-#clrAll span{position:relative;z-index:1;transition:color .6s}
-#clrAll.hold span{color:#fff}
-#clrAll::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);padding:3px 8px;font-size:11px;white-space:nowrap;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .12s;z-index:5}
-#clrAll:hover::after,#clrAll:focus-visible::after{opacity:1}
-th[data-s]{cursor:pointer;user-select:none;white-space:nowrap}
-th[data-s]:hover{color:var(--gold)}
+#q{flex:0 0 190px;width:190px}
+#b2{margin-left:auto}
+th.s{cursor:pointer;user-select:none}
+th.s:hover{color:var(--gold)}
+th.s[aria-sort=ascending]::after{content:" ▲";font-size:9px}
+th.s[aria-sort=descending]::after{content:" ▼";font-size:9px}
 .tbar button,.tbar select,.tbar #q{padding:5px 9px;font-size:13px}
 .cust{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .cust label{display:flex;gap:5px;align-items:center;color:var(--mute);font-size:13px}
@@ -217,25 +212,26 @@ td input{width:92px;text-align:right;padding:3px 6px;font-size:13px}
     <div class="main"><small>Total Value</small><b id="tot">0</b><span class="ph" id="totph"></span></div>
     <div><small>Yang Drop</small><b id="yang">0</b></div>
     <div><small>Material Values</small><b id="itemv">0</b></div>
-    <div><small>Time Range</small><b id="hdur">–</b><span class="ph blk" id="rngph"></span><div class="at"><small>Active Time</small><b id="act">–</b></div></div>
+    <div><small>Time Range</small><b id="hdur">–</b><span class="ph blk" id="rngph"></span><span class="at">Active Time: <b id="act">–</b></span></div>
   </div>
 
-  <div class="bar tbar tb2">
+  <div class="bar tbar">
     <input id="q" type="search" placeholder="Search items" aria-label="Search items">
     <button id="bs" aria-pressed="true">kk format: On</button>
     <select id="sort" aria-label="Sort">
       <option value="v">By value</option>
       <option value="q">By quantity</option>
       <option value="e">By drop count</option>
+      <option value="u">By unit price</option>
       <option value="n">By name</option>
     </select>
+    <button id="clrAll">Clear</button>
     <button id="b1" aria-pressed="false">Skill books</button>
-    <button id="b2" class="sz" aria-pressed="false">Priced only</button>
-    <button id="clrAll" class="sz" data-tip="Press 3 seconds"><span>Clear</span></button>
+    <button id="b2" aria-pressed="false">Priced only</button>
   </div>
   <div class="wrap">
     <table>
-      <thead><tr><th data-s="n" data-l="Item" tabindex="0">Item</th><th data-s="q" data-l="Qty" tabindex="0">Qty</th><th data-s="e" data-l="Drops" tabindex="0">Drops</th><th data-s="p" data-l="Unit price (Yang)" tabindex="0">Unit price (Yang)</th><th data-s="t" data-l="Total value" tabindex="0">Total value</th></tr></thead>
+      <thead><tr><th>Item</th><th class="s" data-s="q" tabindex="0">Qty</th><th class="s" data-s="e" tabindex="0">Drops</th><th class="s" data-s="u" tabindex="0">Unit price (Yang)</th><th class="s" data-s="v" tabindex="0">Total value</th></tr></thead>
       <tbody id="rows"></tbody>
     </table>
   </div>
@@ -251,7 +247,6 @@ const MIN=6e4;
 /* Yang drop rule: a Yang entry counts only if it is <= 100kk AND the same drop
    (log lines within GAP seconds of each other) also contains one of these items. */
 const YMAX=1e8, GAP=2;
-const ACT_GAP=5; // minutes: a pause longer than this between drops is a break (not active time)
 const TRIG=[/^shard$/i,/nataraja/i,/baumsmaragd/i,/stein der dryaden|stone of the dryads/i];
 const isTrig=n=>TRIG.some(r=>r.test(n));
 
@@ -268,7 +263,8 @@ let SO=new Set(ld("sideOpen",[]));                // open sidebar groups
 const isM=()=>matchMedia("(max-width:760px)").matches;
 let sbHide=isM()?true:ld("sbHide",false);
 let X=null;                                       // the one loaded log file (not persisted)
-let mode="all",sk=false,pr=false,sc=null,sd=-1;
+let mode="all",sk=false,pr=false,SK="v",SD=-1;
+const AGAP=5;   // drop minutes up to 5 min apart belong to the same farming session
 let EV=[],KN=new Set(),T0=0,T1=0,H=0;
 
 /* ---------- formatting ---------- */
@@ -282,6 +278,9 @@ const p2=n=>String(n).padStart(2,"0");
 const fd=t=>{const d=new Date(t*MIN);return p2(d.getUTCDate())+"."+p2(d.getUTCMonth()+1)+"."+d.getUTCFullYear()+" "+p2(d.getUTCHours())+":"+p2(d.getUTCMinutes())};
 const fi=t=>new Date(t*MIN).toISOString().slice(0,16);
 const pi=s=>Date.parse(s+":00Z")/MIN;
+/* images: put PNGs in the png/ folder, named after the item (lowercase, spaces -> "-"), e.g. "Shard" -> png/shard.png */
+const slug=n=>String(n).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+const img=n=>`<img class="ic" src="png/${slug(n)}.png" alt="" loading="lazy" onerror="this.remove()">`;
 const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
 const parse=s=>{s=String(s).trim().toLowerCase().replace(/\s/g,"");if(!s)return 0;
   let m=1;const x=/(k+|m|b)$/.exec(s);
@@ -340,20 +339,18 @@ function win(){
   return{ok:1,a,b,h};
 }
 function fitR(){
-  const sum=document.querySelector(".sum"),el=$("rngph");
-  let tc=1.5,s=11;sum.style.setProperty("--tc",tc+"fr");el.style.fontSize=s+"px";
-  /* not enough room: give Time Range more width (the other three boxes shrink), then shrink the text */
-  while(el.scrollWidth>el.clientWidth&&tc<3.5){tc+=.1;sum.style.setProperty("--tc",tc.toFixed(1)+"fr")}
-  while(el.scrollWidth>el.clientWidth&&s>6){s-=.5;el.style.fontSize=s+"px"}
+  const el=$("rngph"),sm=document.querySelector(".sum");
+  const fit=()=>{let s=11;el.style.fontSize=s+"px";while(el.scrollWidth>el.clientWidth&&s>9){s-=.5;el.style.fontSize=s+"px"}return el.scrollWidth<=el.clientWidth};
+  sm.classList.remove("tight");
+  if(!fit()){sm.classList.add("tight");fit()}
 }
 const SPL_G=/^greater splinter$/i, SPL_E=/^elite splinter$/i;
 
 function draw(){
-  const w=win(),m={},ams=new Set();
+  const w=win(),m={},mins=new Set();
   EV.forEach(([t,n,q,e])=>{
     if(t>=w.a&&t<w.b){
-      const x=m[n]||(m[n]=[0,0]);x[0]+=q;x[1]+=e;
-      ams.add(t);
+      const x=m[n]||(m[n]=[0,0]);x[0]+=q;x[1]+=e;mins.add(t);
     }
   });
   pins.forEach(n=>{if(KN.has(n)&&!m[n])m[n]=[0,0]});
@@ -363,16 +360,11 @@ function draw(){
   $("yang").textContent=fv(y);$("itemv").textContent=fv(iv);$("tot").textContent=fv(y+iv);
   $("hdur").textContent=fh(w.h);
 
-  /* active time: minutes spent farming; pauses longer than ACT_GAP minutes are breaks */
-  let at=0,s0=null,l0=null;
-  for(const t of [...ams].sort((a,b)=>a-b)){
-    if(s0===null){s0=l0=t}
-    else if(t-l0<=ACT_GAP){l0=t}
-    else{at+=l0-s0+1;s0=l0=t}
-  }
-  if(s0!==null)at+=l0-s0+1;
-  $("act").textContent=fh(at/60);
-  const rate=at>0?(y+iv)/(at/60):0;
+  /* Active Time = time actually spent getting drops: minutes with drops, gaps up to AGAP min count as farming, longer breaks do not */
+  const ms=[...mins].sort((p,q)=>p-q);let act=0;
+  ms.forEach((t,i)=>{act+=i&&t-ms[i-1]<=AGAP?t-ms[i-1]:1});
+  $("act").textContent=act?fh(act/60):"–";
+  const rate=act>0?(y+iv)/(act/60):0;
   $("totph").textContent=rate>0?fv(rate)+"/h":"";
 
   /* content counters: each Greater / Elite Splinter drop = +1 portal */
@@ -380,24 +372,26 @@ function draw(){
   const gName=names.find(n=>SPL_G.test(n)),eName=names.find(n=>SPL_E.test(n));
   $("ctSec").hidden=!(gName||eName);
   $("ctList").innerHTML=
-    (gName?`<div class="cbox g"><span>Greater Portal</span><b>${f((m[gName]||[0,0])[1])}</b></div>`:"")+
-    (eName?`<div class="cbox e"><span>Elite Portal</span><b>${f((m[eName]||[0,0])[1])}</b></div>`:"");
+    (gName?`<div class="cbox g">${img("greater portal")}<span>Greater Portal</span><b>${f((m[gName]||[0,0])[1])}</b></div>`:"")+
+    (eName?`<div class="cbox e">${img("elite portal")}<span>Elite Portal</span><b>${f((m[eName]||[0,0])[1])}</b></div>`:"");
 
   $("rngph").textContent=w.ok?fd(w.a)+" – "+fd(w.b):(EV.length?(w.none?"No data in this range":"Invalid range"):"");
   fitR();
 
-  const t=$("q").value.trim().toLowerCase(),s=$("sort").value;
+  const t=$("q").value.trim().toLowerCase();
+  $("sort").value=SK;
+  document.querySelectorAll("th.s").forEach(h=>h.setAttribute("aria-sort",h.dataset.s===SK?(SD>0?"ascending":"descending"):"none"));
   const r=Object.entries(m).filter(([n,v])=>n!=="Yang"&&(v[0]>0||pins.has(n))&&(!t||n.toLowerCase().includes(t))&&(!sk||isSk(n))&&(!pr||price(n)>0));
-  const val=(n,v,k)=>k==="n"?n:k==="q"?v[0]:k==="e"?v[1]:k==="p"?price(n):v[0]*price(n);
-  document.querySelectorAll("th[data-s]").forEach(h=>{const on=h.dataset.s===sc;h.textContent=h.dataset.l+(on?(sd>0?" ▲":" ▼"):"");h.setAttribute("aria-sort",on?(sd>0?"ascending":"descending"):"none")});
+  const key=(n,v)=>SK==="n"?n:SK==="q"?v[0]:SK==="e"?v[1]:SK==="u"?price(n):v[0]*price(n);
   r.sort((a,b)=>{
     const pd=pins.has(b[0])-pins.has(a[0]);if(pd)return pd;
-    if(sc){const x=val(a[0],a[1],sc),y2=val(b[0],b[1],sc);return (sc==="n"?x.localeCompare(y2):x-y2)*sd||a[0].localeCompare(b[0])}
-    return (s==="n"?a[0].localeCompare(b[0]):s==="q"?b[1][0]-a[1][0]:s==="e"?b[1][1]-a[1][1]:b[1][0]*price(b[0])-a[1][0]*price(a[0])||b[1][0]-a[1][0]);
+    const x=key(a[0],a[1]),y=key(b[0],b[1]);
+    const c=SK==="n"?x.localeCompare(y):x-y;
+    return c?c*SD:b[1][0]-a[1][0];
   });
   $("rows").innerHTML=r.map(([n,[qt,e]])=>{
     const p=price(n),pn=pins.has(n),en=esc(n);
-    return `<tr class="${p?"set":""}${pn?" pin":""}"><td class="n"><button class="pb" data-p="${en}" aria-pressed="${pn}" aria-label="Pin ${en}">★</button>${en}</td><td>${f(qt)}</td><td>${f(e)}</td><td><input data-n="${en}" value="${p?fp(p):""}" placeholder="0" inputmode="decimal" aria-label="${en} unit price"></td><td class="v">${p?fv(qt*p):"–"}</td></tr>`;
+    return `<tr class="${p?"set":""}${pn?" pin":""}"><td class="n"><button class="pb" data-p="${en}" aria-pressed="${pn}" aria-label="Pin ${en}">★</button>${img(n)}${en}</td><td>${f(qt)}</td><td>${f(e)}</td><td><input data-n="${en}" value="${p?fp(p):""}" placeholder="0" inputmode="decimal" aria-label="${en} unit price"></td><td class="v">${p?fv(qt*p):"–"}</td></tr>`;
   }).join("")||`<tr><td colspan="5">${EV.length?"No items in this range.":"Add a log file above to get started."}</td></tr>`;
 }
 
@@ -421,34 +415,15 @@ $("seg").onclick=e=>{
 };
 ["cd","cs","ce"].forEach(id=>{$(id).addEventListener("input",draw);$(id).addEventListener("change",draw)});
 $("q").oninput=draw;
-$("sort").onchange=()=>{sc=null;draw()};
-const thSort=e=>{
-  const h=e.target.closest("th[data-s]");if(!h)return;
-  if(e.type==="keydown"){if(e.key!=="Enter"&&e.key!==" ")return;e.preventDefault()}
-  const k=h.dataset.s;
-  if(sc===k)sd=-sd;else{sc=k;sd=k==="n"?1:-1}
-  draw();
+$("sort").onchange=()=>{SK=$("sort").value;SD=SK==="n"?1:-1;draw()};
+function hs(h){if(!h.dataset.s)return;if(SK===h.dataset.s)SD=-SD;else{SK=h.dataset.s;SD=-1}draw()}
+document.querySelector("thead").addEventListener("click",e=>{const h=e.target.closest("th.s");if(h)hs(h)});
+document.querySelector("thead").addEventListener("keydown",e=>{const h=e.target.closest("th.s");if(h&&(e.key==="Enter"||e.key===" ")){e.preventDefault();hs(h)}});
+$("clrAll").onclick=()=>{
+  if(!confirm("Clear everything? This removes the loaded log, all unit prices and all pins."))return;
+  P={};pins=new Set();sv("lootPrices",P);sv("lootPins",[]);
+  X=null;$("msg").textContent="";rebuild();draw();
 };
-document.querySelector("thead").addEventListener("click",thSort);
-document.querySelector("thead").addEventListener("keydown",thSort);
-/* Clear: hold for 3 seconds (gold fill grows from the centre outwards), then everything is wiped */
-(()=>{
-  const b=$("clrAll");let tm=null;
-  const stop=()=>{clearTimeout(tm);tm=null;b.classList.remove("hold")};
-  const start=()=>{
-    if(tm)return;b.classList.add("hold");
-    tm=setTimeout(()=>{
-      stop();
-      X=null;P={};pins=new Set();sv("lootPrices",P);sv("lootPins",[]);
-      sc=null;$("q").value="";$("msg").textContent="";rebuild();draw();
-    },3000);
-  };
-  b.addEventListener("pointerdown",e=>{if(e.button===0||e.pointerType!=="mouse")start()});
-  ["pointerup","pointerleave","pointercancel","blur"].forEach(t=>b.addEventListener(t,stop));
-  b.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!e.repeat){e.preventDefault();start()}});
-  b.addEventListener("keyup",e=>{if(e.key==="Enter"||e.key===" ")stop()});
-  b.addEventListener("contextmenu",e=>e.preventDefault());
-})();
 $("bs").onclick=()=>{
   short=!short;sv("lootShort",short?1:0);
   $("bs").setAttribute("aria-pressed",short);$("bs").textContent="kk format: "+(short?"On":"Off");
