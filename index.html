@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<link rel="icon" type="image/png" href="png/head.png">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Nihor2</title>
+<title>Nihor</title>
 <meta name="description" content="Loot Tracker: turn game loot logs into drop values and hourly income.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23a8700f'/%3E%3Ctext x='16' y='23' font-size='20' font-family='sans-serif' font-weight='800' text-anchor='middle' fill='white'%3EN%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&amp;display=swap" rel="stylesheet">
@@ -98,6 +98,7 @@ button[aria-pressed=true]{background:var(--gold);color:#fff;border-color:var(--g
 .cbox .ic{align-self:center;margin-right:0}
 .cbox b{font-size:15px;font-weight:800}
 .cbox.g{background:#f2c230;color:#1b1500;border:1px solid #d9a916}
+.cbox.s{background:#7b2fbe;color:#fff;border:1px solid #5d1f94}
 .cbox.e{background:#fff;color:#1b2430;border:1px solid #cfcfcf}
 .sum{display:grid;grid-template-columns:1fr 1fr 1fr 1.5fr;gap:9px;margin-bottom:15px}
 @media (max-width:640px){.sum{grid-template-columns:1fr 1fr}}
@@ -249,6 +250,10 @@ const MIN=6e4;
 const YMAX=1e8, GAP=2;
 const TRIG=[/^shard$/i,/nataraja/i,/baumsmaragd/i,/stein der dryaden|stone of the dryads/i];
 const isTrig=n=>TRIG.some(r=>r.test(n));
+/* Super Elite: one drop (same GAP clustering) holding at least 3 DIFFERENT items of this list;
+   Yang counts as one of them when it is between SEMIN and YMAX. */
+const SEMIN=3e7, SENEED=3;
+const SECAT=[/nataraja|medallion/i,/skill book chest.*\[g-p\]|\[g-p\].*skill book chest/i,/baumsmaragd/i];
 
 /* ---------- storage ---------- */
 const ld=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
@@ -265,7 +270,7 @@ let sbHide=isM()?true:ld("sbHide",false);
 let X=null;                                       // the one loaded log file (not persisted)
 let mode="all",sk=false,pr=false,SK="v",SD=-1;
 const AGAP=5;   // drop minutes up to 5 min apart belong to the same farming session
-let EV=[],KN=new Set(),T0=0,T1=0,H=0;
+let EV=[],KN=new Set(),T0=0,T1=0,H=0,SUP=[];
 
 /* ---------- formatting ---------- */
 const f=n=>Math.round(n).toLocaleString("en-US");
@@ -305,7 +310,7 @@ $("thm").onclick=e=>{
 
 /* ---------- data ---------- */
 function rebuild(){
-  EV=[];KN=new Set();
+  EV=[];KN=new Set();SUP=X?X.sup:[];
   if(X){
     X.rows.forEach(([t,i,q,e])=>{const n=X.items[i];EV.push([t,n,q,e]);KN.add(n)});
     T0=X.from;T1=X.to;H=(X.to-X.from+1)/60;
@@ -370,9 +375,11 @@ function draw(){
   /* content counters: each Greater / Elite Splinter drop = +1 portal */
   const names=[...KN];
   const gName=names.find(n=>SPL_G.test(n)),eName=names.find(n=>SPL_E.test(n));
-  $("ctSec").hidden=!(gName||eName);
+  const se=SUP.filter(t=>t>=w.a&&t<w.b).length;
+  $("ctSec").hidden=!(gName||eName||SUP.length);
   $("ctList").innerHTML=
     (gName?`<div class="cbox g">${img("greater portal")}<span>Greater Portal</span><b>${f((m[gName]||[0,0])[1])}</b></div>`:"")+
+    (SUP.length?`<div class="cbox s">${img("super elite")}<span>Super Elite</span><b>${f(se)}</b></div>`:"")+
     (eName?`<div class="cbox e">${img("elite portal")}<span>Elite Portal</span><b>${f((m[eName]||[0,0])[1])}</b></div>`:"");
 
   $("rngph").textContent=w.ok?fd(w.a)+" – "+fd(w.b):(EV.length?(w.none?"No data in this range":"Invalid range"):"");
@@ -436,7 +443,7 @@ $("b2").onclick=()=>{pr=!pr;$("b2").setAttribute("aria-pressed",pr);draw()};
 const RX=/^\[(\d\d)\/(\d\d)\/(\d\d)\] \[(\d\d):(\d\d):(\d\d)\]: You receive (\d+) (.+?)\.\s*$/;
 $("pick").onchange=async()=>{
   const fl=$("pick").files[0];if(!fl)return;
-  const items=[],idx={},mp={};let from=1e12,to=0,c=0,cur=[],cmax=0;
+  const items=[],idx={},mp={},sup=[];let from=1e12,to=0,c=0,cur=[],cmax=0;
   const add=(t,n,q)=>{
     let i=idx[n];if(i===undefined){i=idx[n]=items.length;items.push(n)}
     const k=t+"|"+i,r=mp[k]||(mp[k]=[t,i,0,0]);r[2]+=q;r[3]++;
@@ -445,6 +452,12 @@ $("pick").onchange=async()=>{
   const flush=()=>{
     if(!cur.length)return;
     const ok=cur.some(x=>isTrig(x[1]));
+    const cat=new Set();
+    for(const [,n,q] of cur){
+      if(n==="Yang"){if(q>=SEMIN&&q<=YMAX)cat.add("y")}
+      else SECAT.forEach((r,i)=>{if(r.test(n))cat.add(i)});
+    }
+    if(cat.size>=SENEED)sup.push(cur[0][0]);
     for(const [t,n,q] of cur){
       if(n==="Yang"&&(q>YMAX||!ok))continue;      // trades / lone Yang are not farming
       add(t,n,q);
@@ -461,7 +474,7 @@ $("pick").onchange=async()=>{
   flush();
   $("pick").value="";
   if(!c){$("msg").textContent=fl.name+": no readable loot lines found.";return}
-  X={name:fl.name,from,to,items,rows:Object.values(mp)};
+  X={name:fl.name,from,to,items,rows:Object.values(mp),sup};
   $("msg").textContent="";
   rebuild();draw();
 };
