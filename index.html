@@ -115,8 +115,16 @@ button[aria-pressed=true]{background:var(--gold);color:#fff;border-color:var(--g
 :root[data-theme="black"] .ph,:root[data-theme="grey"] .ph{color:#fff}
 @media (prefers-color-scheme:dark){:root:not([data-theme]) .ph{color:#fff}}
 .ph.blk{display:block;margin:3px 0 0;font-size:11px;white-space:nowrap;overflow:hidden}
-#q{flex:0 0 190px;width:190px}
+#q{flex:0 0 165px;width:165px}
+#sort{width:112px}
 #b2{margin-left:auto}
+#clrAll{min-width:89px;position:relative;overflow:hidden;background:var(--panel);touch-action:none;user-select:none;-webkit-user-select:none}
+#clrAll i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--gold);opacity:.9}
+#clrAll span{position:relative}
+#clrAll.hold i{width:100%;transition:width 2s linear}
+#clrAll.hold span{color:#fff}
+#clrAll.done{border-color:var(--gold)}
+.cbox.o{background:var(--hl);color:var(--ink);border:1px solid var(--gold)}
 th.s{cursor:pointer;user-select:none}
 th.s:hover{color:var(--gold)}
 th.s[aria-sort=ascending]::after{content:" ▲";font-size:9px}
@@ -226,9 +234,9 @@ td input{width:92px;text-align:right;padding:3px 6px;font-size:13px}
       <option value="u">By unit price</option>
       <option value="n">By name</option>
     </select>
-    <button id="clrAll">Clear</button>
     <button id="b1" aria-pressed="false">Skill books</button>
     <button id="b2" aria-pressed="false">Priced only</button>
+    <button id="clrAll" title="Press and hold 2 seconds"><i></i><span>Clear</span></button>
   </div>
   <div class="wrap">
     <table>
@@ -349,6 +357,12 @@ function fitR(){
   sm.classList.remove("tight");
   if(!fit()){sm.classList.add("tight");fit()}
 }
+/* chest drops -> Content label (left: item name in the log, right: label shown). Counts drop events in the range. */
+const CHESTS=[
+ [/^chest of platun$/i,"Platun"],[/^taliko'?s riches$/i,"Taliko"],[/^nalantir'?s legacy$/i,"Nalantir"],
+ [/^chest of the owl king$/i,"Owl"],[/^heroic chest of nemedere$/i,"Heroic Nemere"],
+ [/^heroic chest of razadere$/i,"Heroic Razador"],[/^heroic chest of jatuno$/i,"Heroic Jotun"],
+ [/^trea?ss?ure of thorns$/i,"Castle"]];
 const SPL_G=/^greater splinter$/i, SPL_E=/^elite splinter$/i;
 
 function draw(){
@@ -375,11 +389,13 @@ function draw(){
   /* content counters: each Greater / Elite Splinter drop = +1 portal */
   const names=[...KN];
   const gName=names.find(n=>SPL_G.test(n)),eName=names.find(n=>SPL_E.test(n));
+  const ch=CHESTS.map(([r,l])=>{const n=names.find(x=>r.test(x));return n?[l,(m[n]||[0,0])[1]]:null}).filter(Boolean);
   const se=SUP.filter(t=>t>=w.a&&t<w.b).length;
-  $("ctSec").hidden=!(gName||eName||SUP.length);
+  $("ctSec").hidden=!(gName||eName||SUP.length||ch.length);
   $("ctList").innerHTML=
     (gName?`<div class="cbox g">${img("greater portal")}<span>Greater Portal</span><b>${f((m[gName]||[0,0])[1])}</b></div>`:"")+
     (SUP.length?`<div class="cbox s">${img("super elite")}<span>Super Elite</span><b>${f(se)}</b></div>`:"")+
+    ch.map(([l,c])=>`<div class="cbox o">${img(l)}<span>${l}</span><b>${f(c)}</b></div>`).join("")+
     (eName?`<div class="cbox e">${img("elite portal")}<span>Elite Portal</span><b>${f((m[eName]||[0,0])[1])}</b></div>`:"");
 
   $("rngph").textContent=w.ok?fd(w.a)+" – "+fd(w.b):(EV.length?(w.none?"No data in this range":"Invalid range"):"");
@@ -426,11 +442,26 @@ $("sort").onchange=()=>{SK=$("sort").value;SD=SK==="n"?1:-1;draw()};
 function hs(h){if(!h.dataset.s)return;if(SK===h.dataset.s)SD=-SD;else{SK=h.dataset.s;SD=-1}draw()}
 document.querySelector("thead").addEventListener("click",e=>{const h=e.target.closest("th.s");if(h)hs(h)});
 document.querySelector("thead").addEventListener("keydown",e=>{const h=e.target.closest("th.s");if(h&&(e.key==="Enter"||e.key===" ")){e.preventDefault();hs(h)}});
-$("clrAll").onclick=()=>{
-  if(!confirm("Clear everything? This removes the loaded log, all unit prices and all pins."))return;
-  P={};pins=new Set();sv("lootPrices",P);sv("lootPins",[]);
-  X=null;$("msg").textContent="";rebuild();draw();
-};
+/* Clear: press and hold 2 seconds (gold bar fills left to right), then everything is reset */
+(()=>{
+  const b=$("clrAll");let tm=0;
+  const stop=()=>{clearTimeout(tm);tm=0;b.classList.remove("hold")};
+  const go=()=>{
+    if(tm)return;
+    b.classList.add("hold");
+    tm=setTimeout(()=>{
+      tm=0;P={};pins=new Set();sv("lootPrices",P);sv("lootPins",[]);
+      X=null;$("msg").textContent="";rebuild();draw();
+      b.classList.remove("hold");b.classList.add("done");setTimeout(()=>b.classList.remove("done"),600);
+    },2000);
+  };
+  b.addEventListener("pointerdown",e=>{if(e.button)return;e.preventDefault();go()});
+  ["pointerup","pointerleave","pointercancel"].forEach(t=>b.addEventListener(t,stop));
+  b.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!e.repeat){e.preventDefault();go()}});
+  b.addEventListener("keyup",e=>{if(e.key==="Enter"||e.key===" ")stop()});
+  b.addEventListener("blur",stop);
+  b.addEventListener("contextmenu",e=>e.preventDefault());
+})();
 $("bs").onclick=()=>{
   short=!short;sv("lootShort",short?1:0);
   $("bs").setAttribute("aria-pressed",short);$("bs").textContent="kk format: "+(short?"On":"Off");
